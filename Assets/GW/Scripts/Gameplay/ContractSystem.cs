@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using GW.Core;
+using GW.UI;
 
 namespace GW.Gameplay
 {
