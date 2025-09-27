@@ -11,6 +11,9 @@ namespace GW.Gameplay
         [SerializeField]
         private ConveyorLineController line;
 
+        [SerializeField]
+        private BlissController blissController;
+
         private readonly List<CandyActor> candiesInZone = new();
         private Collider2D triggerCollider;
 
@@ -25,6 +28,11 @@ namespace GW.Gameplay
             if (line != null)
             {
                 BindLine(line);
+            }
+
+            if (blissController != null && line != null)
+            {
+                blissController.BindLine(line);
             }
         }
 
@@ -57,10 +65,28 @@ namespace GW.Gameplay
             {
                 line = null;
                 candiesInZone.Clear();
+                if (blissController != null)
+                {
+                    blissController.BindLine(null);
+                }
                 return;
             }
 
             line = controller;
+
+            if (blissController != null)
+            {
+                blissController.BindLine(line);
+            }
+        }
+
+        public void BindBlissController(BlissController controller)
+        {
+            blissController = controller;
+            if (blissController != null && line != null)
+            {
+                blissController.BindLine(line);
+            }
         }
 
         public void UnbindLine(ConveyorLineController controller)
@@ -106,7 +132,25 @@ namespace GW.Gameplay
             }
 
             var signedOffset = line.CalculateOffsetFromSealPoint(targetCandy.transform.position);
+            signedOffset = ApplyBlissAutoSnap(signedOffset);
             line.ProcessSealAttempt(targetCandy, signedOffset);
+        }
+
+        private float ApplyBlissAutoSnap(float offset)
+        {
+            if (line?.Judge == null || blissController == null || !blissController.IsActive)
+            {
+                return offset;
+            }
+
+            var judge = line.Judge;
+            var snapThreshold = judge.PerfectWindow * (1f + blissController.AutoSnapPercentage);
+            if (Mathf.Abs(offset) <= snapThreshold)
+            {
+                return 0f;
+            }
+
+            return offset;
         }
 
         private void CleanupInactive()

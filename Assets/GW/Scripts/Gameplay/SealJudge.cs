@@ -17,6 +17,9 @@ namespace GW.Gameplay
         public event Action<int, SealGrade> OnScored;
         public event Action OnStateChanged;
 
+        public float PerfectWindow => perfectWindow;
+        public float GoodWindow => goodWindow;
+
         private readonly float perfectWindow;
         private readonly float goodWindow;
         private readonly int comboStep;
@@ -47,6 +50,18 @@ namespace GW.Gameplay
             this.blissGood = Mathf.Max(0f, blissGood);
             this.blissFailPenalty = Mathf.Max(0f, blissFailPenalty);
             this.failPenalty = Mathf.Max(0, failPenalty);
+        }
+
+        public bool TryConsumeBliss(float threshold = 1f)
+        {
+            if (Bliss + Mathf.Epsilon < threshold)
+            {
+                return false;
+            }
+
+            Bliss = 0f;
+            OnStateChanged?.Invoke();
+            return true;
         }
 
         public SealGrade OnSeal(float offsetAbs)
