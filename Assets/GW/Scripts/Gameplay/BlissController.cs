@@ -25,6 +25,9 @@ namespace GW.Gameplay
         [SerializeField]
         private AudioSource exitAudio;
 
+        [SerializeField]
+        private LineFocusController focusController;
+
         [Header("Bliss Settings")]
         [SerializeField]
         private float blissThreshold = 1f;
@@ -65,6 +68,11 @@ namespace GW.Gameplay
                 loopAudio.loop = true;
                 loopAudio.playOnAwake = false;
             }
+
+            if (focusController == null)
+            {
+                focusController = FindObjectOfType<LineFocusController>();
+            }
         }
 
         private void OnEnable()
@@ -81,6 +89,11 @@ namespace GW.Gameplay
         {
             if (!isActive && Input.GetKeyDown(KeyCode.Space))
             {
+                if (!HasInputFocus())
+                {
+                    return;
+                }
+
                 TryActivate();
             }
 
@@ -99,6 +112,11 @@ namespace GW.Gameplay
         public void BindLine(ConveyorLineController line)
         {
             trackedLine = line;
+        }
+
+        public void BindFocusController(LineFocusController controller)
+        {
+            focusController = controller;
         }
 
         private void TryActivate()
@@ -173,6 +191,21 @@ namespace GW.Gameplay
             {
                 StateChanged?.Invoke(false);
             }
+        }
+
+        private bool HasInputFocus()
+        {
+            if (trackedLine == null)
+            {
+                return false;
+            }
+
+            if (focusController == null)
+            {
+                return true;
+            }
+
+            return focusController.IsLineFocused(trackedLine);
         }
 
         private void StopAudioAndVfx()

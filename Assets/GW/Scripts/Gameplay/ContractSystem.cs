@@ -17,6 +17,9 @@ namespace GW.Gameplay
         private List<ConveyorLineController> lines = new();
 
         [SerializeField]
+        private bool autoPopulateLines = true;
+
+        [SerializeField]
         private ContractsPanel contractsPanel;
 
         [Header("Contracts")]
@@ -40,11 +43,14 @@ namespace GW.Gameplay
 
         private void Awake()
         {
+            RefreshLines();
             credits = startingCredits;
         }
 
         private void OnEnable()
         {
+            RefreshLines();
+
             foreach (var line in lines)
             {
                 if (line == null)
@@ -148,6 +154,41 @@ namespace GW.Gameplay
             {
                 RefillContracts();
                 NotifyStateChanged();
+            }
+        }
+
+        private void RefreshLines()
+        {
+            if (lines == null)
+            {
+                lines = new List<ConveyorLineController>();
+            }
+
+            var unique = new HashSet<ConveyorLineController>();
+            for (var i = lines.Count - 1; i >= 0; i--)
+            {
+                var line = lines[i];
+                if (line == null || !unique.Add(line))
+                {
+                    lines.RemoveAt(i);
+                }
+            }
+
+            if (!autoPopulateLines)
+            {
+                return;
+            }
+
+            var discovered = FindObjectsOfType<ConveyorLineController>(true);
+            for (var i = 0; i < discovered.Length; i++)
+            {
+                var line = discovered[i];
+                if (line == null || !unique.Add(line))
+                {
+                    continue;
+                }
+
+                lines.Add(line);
             }
         }
 
@@ -272,6 +313,13 @@ namespace GW.Gameplay
                 activeContracts.Add(new ContractInstance(next));
             }
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            RefreshLines();
+        }
+#endif
 
         private ContractDef DrawRandomContract()
         {

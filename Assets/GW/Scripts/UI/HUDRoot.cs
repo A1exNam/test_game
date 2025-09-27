@@ -12,6 +12,12 @@ namespace GW.UI
         private ConveyorLineController trackedLine;
 
         [SerializeField]
+        private LineFocusController focusController;
+
+        [SerializeField]
+        private bool autoLocateFocusController = true;
+
+        [SerializeField]
         private Text scoreText;
 
         [SerializeField]
@@ -33,10 +39,21 @@ namespace GW.UI
         private string multiplierFormat = "×{0:F1}";
 
         private ConveyorLineController boundLine;
+        private bool focusSubscribed;
 
         private void OnEnable()
         {
-            if (trackedLine != null)
+            if (autoLocateFocusController && focusController == null)
+            {
+                focusController = FindObjectOfType<LineFocusController>();
+            }
+
+            if (focusController != null)
+            {
+                SubscribeFocus();
+                HandleFocusChanged(focusController.CurrentLine);
+            }
+            else if (trackedLine != null)
             {
                 BindLine(trackedLine);
             }
@@ -44,6 +61,7 @@ namespace GW.UI
 
         private void OnDisable()
         {
+            UnsubscribeFocus();
             UnbindLine();
         }
 
@@ -123,6 +141,64 @@ namespace GW.UI
             }
 
             blissFillImage.fillAmount = Mathf.Clamp01(value);
+        }
+
+        public void BindFocusController(LineFocusController controller)
+        {
+            if (focusController == controller)
+            {
+                return;
+            }
+
+            UnsubscribeFocus();
+            focusController = controller;
+
+            if (isActiveAndEnabled)
+            {
+                if (focusController != null)
+                {
+                    SubscribeFocus();
+                    HandleFocusChanged(focusController.CurrentLine);
+                }
+                else if (trackedLine != null)
+                {
+                    BindLine(trackedLine);
+                }
+            }
+        }
+
+        private void SubscribeFocus()
+        {
+            if (focusController == null || focusSubscribed)
+            {
+                return;
+            }
+
+            focusController.FocusChanged += HandleFocusChanged;
+            focusSubscribed = true;
+        }
+
+        private void UnsubscribeFocus()
+        {
+            if (!focusSubscribed || focusController == null)
+            {
+                focusSubscribed = false;
+                return;
+            }
+
+            focusController.FocusChanged -= HandleFocusChanged;
+            focusSubscribed = false;
+        }
+
+        private void HandleFocusChanged(ConveyorLineController line)
+        {
+            if (line == null)
+            {
+                UnbindLine();
+                return;
+            }
+
+            BindLine(line);
         }
     }
 }

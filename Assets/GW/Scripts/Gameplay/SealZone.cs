@@ -14,6 +14,9 @@ namespace GW.Gameplay
         [SerializeField]
         private BlissController blissController;
 
+        [SerializeField]
+        private LineFocusController focusController;
+
         private readonly List<CandyActor> candiesInZone = new();
         private Collider2D triggerCollider;
 
@@ -25,6 +28,11 @@ namespace GW.Gameplay
                 triggerCollider.isTrigger = true;
             }
 
+            if (focusController == null)
+            {
+                focusController = FindObjectOfType<LineFocusController>();
+            }
+
             if (line != null)
             {
                 BindLine(line);
@@ -33,6 +41,11 @@ namespace GW.Gameplay
             if (blissController != null && line != null)
             {
                 blissController.BindLine(line);
+            }
+
+            if (blissController != null && focusController != null)
+            {
+                blissController.BindFocusController(focusController);
             }
         }
 
@@ -46,6 +59,11 @@ namespace GW.Gameplay
             if (Input.GetMouseButtonDown(0))
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
+
+                if (!HasInputFocus())
                 {
                     return;
                 }
@@ -87,6 +105,21 @@ namespace GW.Gameplay
             {
                 blissController.BindLine(line);
             }
+
+            if (blissController != null && focusController != null)
+            {
+                blissController.BindFocusController(focusController);
+            }
+        }
+
+        public void BindFocusController(LineFocusController controller)
+        {
+            focusController = controller;
+
+            if (focusController != null && blissController != null)
+            {
+                blissController.BindFocusController(focusController);
+            }
         }
 
         public void UnbindLine(ConveyorLineController controller)
@@ -102,6 +135,11 @@ namespace GW.Gameplay
 
         private void AttemptSeal()
         {
+            if (!HasInputFocus())
+            {
+                return;
+            }
+
             CleanupInactive();
             if (candiesInZone.Count == 0)
             {
@@ -151,6 +189,21 @@ namespace GW.Gameplay
             }
 
             return offset;
+        }
+
+        private bool HasInputFocus()
+        {
+            if (line == null)
+            {
+                return false;
+            }
+
+            if (focusController == null)
+            {
+                return true;
+            }
+
+            return focusController.IsLineFocused(line);
         }
 
         private void CleanupInactive()
