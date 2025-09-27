@@ -17,6 +17,9 @@ namespace GW.Gameplay
         private List<ConveyorLineController> lines = new();
 
         [SerializeField]
+        private bool autoPopulateLines = true;
+
+        [SerializeField]
         private UpgradePanel upgradePanel;
 
         [Header("Library")]
@@ -39,6 +42,7 @@ namespace GW.Gameplay
 
         private void Awake()
         {
+            RefreshLineCollection();
             nodeLookup.Clear();
             BuildLookup(upgradeNodes);
 
@@ -64,6 +68,8 @@ namespace GW.Gameplay
 
         private void OnEnable()
         {
+            RefreshLineCollection();
+
             if (contractSystem != null)
             {
                 contractSystem.CreditsChanged += HandleCreditsChanged;
@@ -303,5 +309,47 @@ namespace GW.Gameplay
                 nodeLookup[node.Id] = node;
             }
         }
+
+        private void RefreshLineCollection()
+        {
+            if (lines == null)
+            {
+                lines = new List<ConveyorLineController>();
+            }
+
+            var unique = new HashSet<ConveyorLineController>();
+            for (var i = lines.Count - 1; i >= 0; i--)
+            {
+                var line = lines[i];
+                if (line == null || !unique.Add(line))
+                {
+                    lines.RemoveAt(i);
+                }
+            }
+
+            if (!autoPopulateLines)
+            {
+                return;
+            }
+
+            var discovered = FindObjectsOfType<ConveyorLineController>(true);
+            for (var i = 0; i < discovered.Length; i++)
+            {
+                var line = discovered[i];
+                if (line == null || !unique.Add(line))
+                {
+                    continue;
+                }
+
+                lines.Add(line);
+            }
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            RefreshLineCollection();
+        }
+#endif
     }
 }
