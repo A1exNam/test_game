@@ -110,7 +110,8 @@ namespace GW.UI
                 return;
             }
 
-            var multiplierValue = 1f + level * 0.5f;
+            var step = boundLine?.Judge?.MultiplierStep ?? 0.5f;
+            var multiplierValue = 1f + level * step;
             multiplierText.text = string.Format(multiplierFormat, multiplierValue);
         }
 

@@ -99,6 +99,23 @@ namespace GW.Gameplay
             contractsPanel = null;
         }
 
+        public bool TrySpendCredits(int amount)
+        {
+            if (amount <= 0)
+            {
+                return true;
+            }
+
+            if (credits < amount)
+            {
+                return false;
+            }
+
+            credits -= amount;
+            CreditsChanged?.Invoke(credits);
+            return true;
+        }
+
         private void HandleSealResolved(ConveyorLineController line, SealGrade grade)
         {
             if (line == null || activeContracts.Count == 0)
