@@ -10,6 +10,9 @@ namespace GW.Gameplay
     {
         [Header("Belt Setup")]
         [SerializeField]
+        private LineId lineId = LineId.A;
+
+        [SerializeField]
         private CandyActor candyPrefab;
 
         [SerializeField]
@@ -44,16 +47,21 @@ namespace GW.Gameplay
         [SerializeField]
         private SealZone sealZone;
 
+        [SerializeField]
+        private string activePatternId = "Default";
+
         public event Action<int> ScoreChanged;
         public event Action<int> ComboChanged;
         public event Action<int> MultiplierChanged;
         public event Action<float> BlissChanged;
-        public event Action<SealGrade> SealResolved;
+        public event Action<ConveyorLineController, SealGrade> SealResolved;
 
         public int Score => score;
         public SealJudge Judge => judge;
         public Vector3 Forward => forwardDirection;
         public Transform SealPoint => sealPoint;
+        public LineId LineId => lineId;
+        public string ActivePatternId => activePatternId;
 
         private readonly List<CandyActor> activeCandies = new();
         private readonly Queue<CandyActor> pool = new();
@@ -190,7 +198,7 @@ namespace GW.Gameplay
             }
 
             var grade = judge.OnSeal(Mathf.Abs(offset));
-            SealResolved?.Invoke(grade);
+            SealResolved?.Invoke(this, grade);
 
             activeCandies.Remove(candy);
             RecycleCandy(candy);
@@ -225,6 +233,11 @@ namespace GW.Gameplay
             score = 0;
             ScoreChanged?.Invoke(score);
             judge.Reset();
+        }
+
+        public void SetActivePattern(string patternId)
+        {
+            activePatternId = patternId ?? string.Empty;
         }
     }
 }

@@ -130,5 +130,16 @@ namespace GW.Gameplay
             Bliss = 0f;
             OnStateChanged?.Invoke();
         }
+
+        public void AddBliss(float amount)
+        {
+            if (amount <= 0f)
+            {
+                return;
+            }
+
+            Bliss = Mathf.Clamp01(Bliss + amount);
+            OnStateChanged?.Invoke();
+        }
     }
 }
