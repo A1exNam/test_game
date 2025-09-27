@@ -45,6 +45,21 @@ namespace GW.Gameplay
         private int maxMultiplierLevel = 4;
 
         [SerializeField]
+        private float multiplierStep = 0.5f;
+
+        [SerializeField]
+        private float blissPerfect = 0.08f;
+
+        [SerializeField]
+        private float blissGood = 0.02f;
+
+        [SerializeField]
+        private float blissFailPenalty = 0.15f;
+
+        [SerializeField]
+        private int failPenalty = 5;
+
+        [SerializeField]
         private SealZone sealZone;
 
         [SerializeField]
@@ -62,6 +77,19 @@ namespace GW.Gameplay
         public Transform SealPoint => sealPoint;
         public LineId LineId => lineId;
         public string ActivePatternId => activePatternId;
+        public float BasePerfectWindow => perfectWindow;
+        public float BaseGoodWindow => goodWindow;
+        public int BaseComboStep => comboStep;
+        public int BaseMaxMultiplierLevel => maxMultiplierLevel;
+        public float BaseMultiplierStep => multiplierStep;
+        public float BaseBlissPerfect => blissPerfect;
+        public float BaseBlissGood => blissGood;
+        public float BaseBlissFailPenalty => blissFailPenalty;
+        public int BaseFailPenalty => failPenalty;
+        public float BaseBeltSpeed => beltSpeed;
+        public float BaseSpawnInterval => spawnInterval;
+        public float CurrentBeltSpeed => GetEffectiveBeltSpeed();
+        public float CurrentSpawnInterval => Mathf.Max(0.1f, spawnInterval * spawnIntervalMultiplier);
 
         private readonly List<CandyActor> activeCandies = new();
         private readonly Queue<CandyActor> pool = new();
@@ -70,6 +98,8 @@ namespace GW.Gameplay
         private Vector3 forwardDirection = Vector3.right;
         private float pathLength;
         private int score;
+        private float beltSpeedMultiplier = 1f;
+        private float spawnIntervalMultiplier = 1f;
 
         private void Awake()
         {
@@ -81,7 +111,7 @@ namespace GW.Gameplay
             forwardDirection = (despawnPoint.position - spawnPoint.position).normalized;
             pathLength = Vector3.Distance(spawnPoint.position, despawnPoint.position);
 
-            judge = new SealJudge(perfectWindow, goodWindow, comboStep, maxMultiplierLevel);
+            judge = new SealJudge(perfectWindow, goodWindow, comboStep, maxMultiplierLevel, multiplierStep, blissPerfect, blissGood, blissFailPenalty, failPenalty);
             judge.OnScored += HandleScored;
             judge.OnStateChanged += HandleJudgeStateChanged;
         }
@@ -116,13 +146,17 @@ namespace GW.Gameplay
             }
 
             spawnTimer += deltaTime;
-            if (spawnTimer < spawnInterval)
+            var interval = CurrentSpawnInterval;
+            if (spawnTimer < interval)
             {
                 return;
             }
 
-            spawnTimer = 0f;
-            SpawnCandy();
+            while (spawnTimer >= interval)
+            {
+                spawnTimer -= interval;
+                SpawnCandy();
+            }
         }
 
         private void TickCandies(float deltaTime)
@@ -155,8 +189,9 @@ namespace GW.Gameplay
         private void SpawnCandy()
         {
             var candy = GetOrCreateCandy();
-            candy.SetSpeed(beltSpeed);
-            candy.Activate(this, spawnPoint.position, forwardDirection, beltSpeed);
+            var speed = GetEffectiveBeltSpeed();
+            candy.SetSpeed(speed);
+            candy.Activate(this, spawnPoint.position, forwardDirection, speed);
             activeCandies.Add(candy);
         }
 
@@ -238,6 +273,66 @@ namespace GW.Gameplay
         public void SetActivePattern(string patternId)
         {
             activePatternId = patternId ?? string.Empty;
+        }
+
+        public void ApplyJudgeOverrides(
+            float perfectWindowOverride,
+            float goodWindowOverride,
+            int comboStepOverride,
+            int maxMultiplierOverride,
+            float multiplierStepOverride,
+            float blissPerfectOverride,
+            float blissGoodOverride,
+            float blissFailPenaltyOverride,
+            int failPenaltyOverride)
+        {
+            if (judge == null)
+            {
+                return;
+            }
+
+            var parameters = new SealJudge.Parameters
+            {
+                PerfectWindow = perfectWindowOverride,
+                GoodWindow = goodWindowOverride,
+                ComboStep = comboStepOverride,
+                MaxMultiplierLevel = maxMultiplierOverride,
+                MultiplierStep = multiplierStepOverride,
+                BlissPerfect = blissPerfectOverride,
+                BlissGood = blissGoodOverride,
+                BlissFailPenalty = blissFailPenaltyOverride,
+                FailPenalty = failPenaltyOverride,
+            };
+
+            judge.ApplyParameters(parameters);
+        }
+
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            beltSpeedMultiplier = Mathf.Clamp(multiplier, 0.25f, 4f);
+            var newSpeed = GetEffectiveBeltSpeed();
+
+            for (var i = 0; i < activeCandies.Count; i++)
+            {
+                var candy = activeCandies[i];
+                if (candy == null)
+                {
+                    continue;
+                }
+
+                candy.SetSpeed(newSpeed);
+            }
+        }
+
+        public void SetSpawnIntervalMultiplier(float multiplier)
+        {
+            spawnIntervalMultiplier = Mathf.Clamp(multiplier, 0.25f, 4f);
+            spawnTimer = Mathf.Min(spawnTimer, CurrentSpawnInterval);
+        }
+
+        private float GetEffectiveBeltSpeed()
+        {
+            return Mathf.Clamp(beltSpeed * beltSpeedMultiplier, 0.05f, 6f);
         }
     }
 }

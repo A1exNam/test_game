@@ -19,16 +19,23 @@ namespace GW.Gameplay
 
         public float PerfectWindow => perfectWindow;
         public float GoodWindow => goodWindow;
+        public int ComboStep => comboStep;
+        public int MaxMultiplierLevel => maxMultiplierLevel;
+        public float MultiplierStep => multiplierStep;
+        public float BlissPerfect => blissPerfect;
+        public float BlissGood => blissGood;
+        public float BlissFailPenalty => blissFailPenalty;
+        public int FailPenalty => failPenalty;
 
-        private readonly float perfectWindow;
-        private readonly float goodWindow;
-        private readonly int comboStep;
-        private readonly int maxMultiplierLevel;
-        private readonly float multiplierStep;
-        private readonly float blissPerfect;
-        private readonly float blissGood;
-        private readonly float blissFailPenalty;
-        private readonly int failPenalty;
+        private float perfectWindow;
+        private float goodWindow;
+        private int comboStep;
+        private int maxMultiplierLevel;
+        private float multiplierStep;
+        private float blissPerfect;
+        private float blissGood;
+        private float blissFailPenalty;
+        private int failPenalty;
 
         public SealJudge(
             float perfectWindow,
@@ -140,6 +147,89 @@ namespace GW.Gameplay
 
             Bliss = Mathf.Clamp01(Bliss + amount);
             OnStateChanged?.Invoke();
+        }
+
+        public void ApplyParameters(Parameters parameters)
+        {
+            var changed = false;
+
+            if (parameters.PerfectWindow.HasValue)
+            {
+                perfectWindow = Mathf.Max(0.0001f, parameters.PerfectWindow.Value);
+                changed = true;
+            }
+
+            if (parameters.GoodWindow.HasValue)
+            {
+                goodWindow = Mathf.Max(perfectWindow, parameters.GoodWindow.Value);
+                changed = true;
+            }
+            else
+            {
+                goodWindow = Mathf.Max(goodWindow, perfectWindow);
+            }
+
+            if (parameters.ComboStep.HasValue)
+            {
+                comboStep = Mathf.Max(1, parameters.ComboStep.Value);
+                changed = true;
+            }
+
+            if (parameters.MaxMultiplierLevel.HasValue)
+            {
+                maxMultiplierLevel = Mathf.Max(0, parameters.MaxMultiplierLevel.Value);
+                MultiplierLevel = Mathf.Min(MultiplierLevel, maxMultiplierLevel);
+                changed = true;
+            }
+
+            if (parameters.MultiplierStep.HasValue)
+            {
+                multiplierStep = Mathf.Max(0f, parameters.MultiplierStep.Value);
+                changed = true;
+            }
+
+            if (parameters.BlissPerfect.HasValue)
+            {
+                blissPerfect = Mathf.Max(0f, parameters.BlissPerfect.Value);
+                changed = true;
+            }
+
+            if (parameters.BlissGood.HasValue)
+            {
+                blissGood = Mathf.Max(0f, parameters.BlissGood.Value);
+                changed = true;
+            }
+
+            if (parameters.BlissFailPenalty.HasValue)
+            {
+                blissFailPenalty = Mathf.Max(0f, parameters.BlissFailPenalty.Value);
+                changed = true;
+            }
+
+            if (parameters.FailPenalty.HasValue)
+            {
+                failPenalty = Mathf.Max(0, parameters.FailPenalty.Value);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                OnStateChanged?.Invoke();
+            }
+        }
+
+        [Serializable]
+        public struct Parameters
+        {
+            public float? PerfectWindow;
+            public float? GoodWindow;
+            public int? ComboStep;
+            public int? MaxMultiplierLevel;
+            public float? MultiplierStep;
+            public float? BlissPerfect;
+            public float? BlissGood;
+            public float? BlissFailPenalty;
+            public int? FailPenalty;
         }
     }
 }
