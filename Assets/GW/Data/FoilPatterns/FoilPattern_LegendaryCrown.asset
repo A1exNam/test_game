@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e05d9e27408e1e14d9cff3753992eb09, type: 3}
+  m_Name: FoilPattern_LegendaryCrown
+  m_EditorClassIdentifier:
+  id: foil_legendary_crown
+  displayName: "Королевский венец"
+  icon: {fileID: 21300000, guid: 0000000000000000f000000000000000, type: 0}
+  specular: 0.88
+  lineFrequency: 5.75
+  lineAngle: 62
+  embossDepth: 0.41
+  seed: 587
+  rarity: 3
+  description: "Редчайший чеканный орнамент с сиянием короны."
