@@ -28,6 +28,11 @@ namespace GW.Gameplay
         private float spawnInterval = 1.2f;
 
         [SerializeField]
+        [Tooltip("Additional candies to prewarm beyond the estimated concurrent requirement.")]
+        [Min(0)]
+        private int poolPrewarmPadding = 2;
+
+        [SerializeField]
         [Range(0.25f, 3f)]
         private float beltSpeed = 1f;
 
@@ -115,7 +120,9 @@ namespace GW.Gameplay
         public float CurrentSpawnInterval => Mathf.Max(0.1f, spawnInterval * spawnIntervalMultiplier);
 
         private readonly List<CandyActor> activeCandies = new List<CandyActor>();
+        private readonly HashSet<CandyActor> activeCandyLookup = new HashSet<CandyActor>();
         private readonly Queue<CandyActor> pool = new Queue<CandyActor>();
+        private readonly HashSet<CandyActor> pooledCandies = new HashSet<CandyActor>();
         private SealJudge judge;
         private float spawnTimer;
         private Vector3 forwardDirection = Vector3.right;
@@ -140,6 +147,8 @@ namespace GW.Gameplay
             judge = new SealJudge(perfectWindow, goodWindow, comboStep, maxMultiplierLevel, multiplierStep, blissPerfect, blissGood, blissFailPenalty, failPenalty);
             judge.OnScored += HandleScored;
             judge.OnStateChanged += HandleJudgeStateChanged;
+
+            PrewarmPool(CalculateInitialPoolTarget());
 
             EnsurePatternRandom();
             EnsurePatternLibrary();
@@ -217,6 +226,7 @@ namespace GW.Gameplay
                 var candy = activeCandies[i];
                 if (candy == null || !candy.IsActive)
                 {
+                    activeCandyLookup.Remove(candy);
                     activeCandies.RemoveAt(i);
                     continue;
                 }
@@ -227,6 +237,7 @@ namespace GW.Gameplay
                 if (distanceTravelled > pathLength + 0.1f)
                 {
                     RecycleCandy(candy);
+                    activeCandyLookup.Remove(candy);
                     activeCandies.RemoveAt(i);
                 }
             }
@@ -241,6 +252,7 @@ namespace GW.Gameplay
             var runtime = randomizePatternPerCandy ? BuildPatternRuntime() : GetCachedPatternRuntime();
             candy.Activate(this, spawnPoint.position, forwardDirection, speed, runtime);
             activeCandies.Add(candy);
+            activeCandyLookup.Add(candy);
         }
 
         private FoilPatternRuntime? GetCachedPatternRuntime()
@@ -270,23 +282,28 @@ namespace GW.Gameplay
             if (pool.Count > 0)
             {
                 candy = pool.Dequeue();
+                pooledCandies.Remove(candy);
             }
             else
             {
-                candy = Instantiate(candyPrefab, spawnPoint.position, Quaternion.identity, transform);
+                candy = Instantiate(candyPrefab, spawnPoint != null ? spawnPoint.position : transform.position, Quaternion.identity, transform);
+                PrepareCandy(candy, false);
             }
 
-            candy.Despawned -= HandleCandyDespawned;
-            candy.Despawned += HandleCandyDespawned;
+            PrepareCandy(candy, false);
             return candy;
         }
 
         private void HandleCandyDespawned(CandyActor candy)
         {
-            if (!pool.Contains(candy))
+            if (candy == null || pooledCandies.Contains(candy))
             {
-                pool.Enqueue(candy);
+                return;
             }
+
+            PrepareCandy(candy, true);
+            pool.Enqueue(candy);
+            pooledCandies.Add(candy);
         }
 
         private void RecycleCandy(CandyActor candy)
@@ -296,7 +313,7 @@ namespace GW.Gameplay
 
         internal void ProcessSealAttempt(CandyActor candy, float offset)
         {
-            if (candy == null || !activeCandies.Contains(candy))
+            if (candy == null || !activeCandyLookup.Contains(candy))
             {
                 return;
             }
@@ -304,6 +321,7 @@ namespace GW.Gameplay
             var grade = judge.OnSeal(Mathf.Abs(offset));
             SealResolved?.Invoke(this, grade);
 
+            activeCandyLookup.Remove(candy);
             activeCandies.Remove(candy);
             RecycleCandy(candy);
         }
@@ -344,6 +362,21 @@ namespace GW.Gameplay
             score = 0;
             ScoreChanged?.Invoke(score);
             judge.Reset();
+
+            for (var i = activeCandies.Count - 1; i >= 0; i--)
+            {
+                var candy = activeCandies[i];
+                if (candy == null)
+                {
+                    continue;
+                }
+
+                activeCandyLookup.Remove(candy);
+                RecycleCandy(candy);
+            }
+
+            activeCandies.Clear();
+            activeCandyLookup.Clear();
         }
 
         public void SetActivePattern(string patternId)
@@ -472,6 +505,62 @@ namespace GW.Gameplay
         private float GetEffectiveBeltSpeed()
         {
             return Mathf.Clamp(beltSpeed * beltSpeedMultiplier, 0.05f, 6f);
+        }
+
+        private void PrepareCandy(CandyActor candy, bool deactivate)
+        {
+            if (candy == null)
+            {
+                return;
+            }
+
+            if (deactivate && candy.gameObject.activeSelf)
+            {
+                candy.gameObject.SetActive(false);
+            }
+
+            candy.transform.SetParent(transform, false);
+            candy.Despawned -= HandleCandyDespawned;
+            candy.Despawned += HandleCandyDespawned;
+        }
+
+        private void PrewarmPool(int targetCount)
+        {
+            if (candyPrefab == null || targetCount <= 0)
+            {
+                return;
+            }
+
+            var required = Mathf.Max(0, targetCount - (pool.Count + activeCandies.Count));
+            for (var i = 0; i < required; i++)
+            {
+                var spawnPos = spawnPoint != null ? spawnPoint.position : transform.position;
+                var candy = Instantiate(candyPrefab, spawnPos, Quaternion.identity, transform);
+                PrepareCandy(candy, true);
+                pool.Enqueue(candy);
+                pooledCandies.Add(candy);
+            }
+        }
+
+        private int CalculateInitialPoolTarget()
+        {
+            var estimated = EstimateConcurrentCandyCount();
+            return Mathf.Max(estimated + poolPrewarmPadding, poolPrewarmPadding);
+        }
+
+        private int EstimateConcurrentCandyCount()
+        {
+            if (candyPrefab == null)
+            {
+                return 0;
+            }
+
+            var speed = Mathf.Max(0.05f, GetEffectiveBeltSpeed());
+            var interval = Mathf.Max(0.1f, CurrentSpawnInterval);
+            var travelDistance = Mathf.Max(0.01f, pathLength);
+            var travelTime = travelDistance / speed;
+            var estimate = Mathf.CeilToInt(travelTime / interval);
+            return Mathf.Clamp(estimate, 1, 256);
         }
 
         private void EnsurePatternLibrary()
