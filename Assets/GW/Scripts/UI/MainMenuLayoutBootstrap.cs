@@ -248,7 +248,7 @@ namespace GW.UI
             textComponent.fontSize = fontSize;
             textComponent.alignment = alignment;
             textComponent.color = color;
-            textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
             textComponent.verticalOverflow = VerticalWrapMode.Truncate;
             textComponent.raycastTarget = false;
