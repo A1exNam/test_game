@@ -95,7 +95,6 @@ namespace GW.UI
 
             var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             var standaloneModule = eventSystem.GetComponent<StandaloneInputModule>();
-            standaloneModule.forceModuleActive = false;
         }
 
         private void EnsureLayout()
