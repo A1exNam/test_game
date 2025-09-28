@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using System.Text;
 
 namespace BlissSeal
 {
@@ -11,17 +11,7 @@ namespace BlissSeal
         [SerializeField] private Transform sealZone;
         [SerializeField] private List<CandyLaneController> lanes = new List<CandyLaneController>();
 
-        [Header("UI")]
-        [SerializeField] private Text scoreText;
-        [SerializeField] private Text comboText;
-        [SerializeField] private Text multiplierText;
-        [SerializeField] private Text blissText;
-        [SerializeField] private Text creditsText;
-        [SerializeField] private Text wasteText;
-        [SerializeField] private Text laneText;
-        [SerializeField] private Text windowText;
-
-        [Header("Gameplay state")] 
+        [Header("Gameplay state")]
         [SerializeField] private bool enableLaneBAtStart;
         [SerializeField] private bool enableLaneCAtStart;
         [Header("Seal zone visual")]
@@ -46,6 +36,18 @@ namespace BlissSeal
         private int _activeLaneIndex = -1;
         private float _currentPerfectWindowPx;
         private GameObject _sealZoneVisual;
+
+        private readonly StringBuilder _laneBuilder = new StringBuilder();
+        private string _scoreLabel = string.Empty;
+        private string _comboLabel = string.Empty;
+        private string _multiplierLabel = string.Empty;
+        private string _blissLabel = string.Empty;
+        private string _creditsLabel = string.Empty;
+        private string _wasteLabel = string.Empty;
+        private string _laneLabel = string.Empty;
+        private string _windowLabel = string.Empty;
+        private GUIStyle _hudLabelStyle;
+        private GUIStyle _hudBoxStyle;
 
         public GameBalance Balance => balance != null ? balance : GameBalance.CreateDefault();
         public bool IsBlissActive => _blissActive;
@@ -463,46 +465,77 @@ namespace BlissSeal
 
         private void UpdateUI()
         {
-            if (scoreText != null)
+            _scoreLabel = $"Score: {_score}";
+            _comboLabel = $"Combo: {_combo}";
+            _multiplierLabel = $"Multiplier: x{_multiplier:F1}";
+
+            string status = _blissActive ? "ACTIVE" : _blissCooldown > 0f ? $"CD {_blissCooldown:F1}s" : "Ready";
+            _blissLabel = $"Bliss: {_bliss:F1}% ({status})";
+            _creditsLabel = $"Credits: {_credits}";
+            _wasteLabel = $"Waste: {_waste}";
+
+            _laneBuilder.Clear();
+            if (_activeLaneIndex >= 0 && _activeLaneIndex < lanes.Count)
             {
-                scoreText.text = $"Score: {_score}";
+                var lane = lanes[_activeLaneIndex];
+                if (lane != null)
+                {
+                    _laneBuilder.Append("Lane: ");
+                    _laneBuilder.Append(lane.LaneLabel);
+                }
             }
 
-            if (comboText != null)
+            if (_laneBuilder.Length == 0)
             {
-                comboText.text = $"Combo: {_combo}";
+                _laneBuilder.Append("Lane: ");
+                _laneBuilder.Append(_activeLaneIndex + 1);
             }
 
-            if (multiplierText != null)
+            _laneLabel = _laneBuilder.ToString();
+            _windowLabel = $"Perfect Window: {_currentPerfectWindowPx:F1}px";
+        }
+
+        private void EnsureHudStyles()
+        {
+            if (_hudLabelStyle == null)
             {
-                multiplierText.text = $"Multiplier: x{_multiplier:F1}";
+                _hudLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 18,
+                    normal = { textColor = Color.white }
+                };
             }
 
-            if (blissText != null)
+            if (_hudBoxStyle == null)
             {
-                string status = _blissActive ? "ACTIVE" : _blissCooldown > 0f ? $"CD {_blissCooldown:F1}s" : "Ready";
-                blissText.text = $"Bliss: {_bliss:F1}% ({status})";
+                _hudBoxStyle = new GUIStyle(GUI.skin.box)
+                {
+                    fontSize = 16
+                };
             }
+        }
 
-            if (creditsText != null)
-            {
-                creditsText.text = $"Credits: {_credits}";
-            }
+        private void OnGUI()
+        {
+            EnsureHudStyles();
 
-            if (wasteText != null)
-            {
-                wasteText.text = $"Waste: {_waste}";
-            }
+            GUILayout.BeginArea(new Rect(20f, 20f, 320f, 240f), _hudBoxStyle);
+            GUILayout.Label(_scoreLabel, _hudLabelStyle);
+            GUILayout.Label(_comboLabel, _hudLabelStyle);
+            GUILayout.Label(_multiplierLabel, _hudLabelStyle);
+            GUILayout.Label(_blissLabel, _hudLabelStyle);
+            GUILayout.Label(_creditsLabel, _hudLabelStyle);
+            GUILayout.Label(_wasteLabel, _hudLabelStyle);
+            GUILayout.Label(_laneLabel, _hudLabelStyle);
+            GUILayout.Label(_windowLabel, _hudLabelStyle);
 
-            if (laneText != null)
-            {
-                laneText.text = $"Lane: {(_activeLaneIndex + 1)}";
-            }
-
-            if (windowText != null)
-            {
-                windowText.text = $"Perfect Window: {_currentPerfectWindowPx:F1}px";
-            }
+            GUILayout.Space(8f);
+            GUILayout.Label("Controls:", _hudLabelStyle);
+            GUILayout.Label("Click - Seal", GUI.skin.label);
+            GUILayout.Label("1/2/3 - Switch lanes", GUI.skin.label);
+            GUILayout.Label("Space - Activate Bliss", GUI.skin.label);
+            GUILayout.Label("C - Quick calibration", GUI.skin.label);
+            GUILayout.EndArea();
         }
     }
 }
