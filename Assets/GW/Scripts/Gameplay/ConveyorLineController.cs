@@ -330,6 +330,13 @@ namespace GW.Gameplay
             ComboChanged?.Invoke(judge.Combo);
             MultiplierChanged?.Invoke(judge.MultiplierLevel);
             BlissChanged?.Invoke(judge.Bliss);
+
+            var save = SaveSystem.Current;
+            if (judge.Combo > save.bestCombo)
+            {
+                save.bestCombo = judge.Combo;
+                SaveSystem.Save();
+            }
         }
 
         public void ForceReset()

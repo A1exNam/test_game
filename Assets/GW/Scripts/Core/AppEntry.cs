@@ -11,6 +11,9 @@ namespace GW.Core
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
+
+            SaveSystem.Load();
+            SettingsService.Initialise();
         }
 
         private void Start()

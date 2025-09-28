@@ -1,0 +1,32 @@
+{
+  "entries": [
+    { "key": "menu.title", "value": "GOLDEN WRAP" },
+    { "key": "menu.subtitle", "value": "Бесконечная фабрика золотой обёртки" },
+    { "key": "menu.play", "value": "Играть" },
+    { "key": "menu.settings", "value": "Настройки" },
+    { "key": "menu.zen", "value": "Зен" },
+    { "key": "menu.multi", "value": "Мульти+" },
+    { "key": "settings.title", "value": "Настройки" },
+    { "key": "settings.section.audio", "value": "Звук" },
+    { "key": "settings.section.accessibility", "value": "Доступность" },
+    { "key": "settings.section.gameplay", "value": "Геймплей" },
+    { "key": "settings.musicVolume", "value": "Громкость музыки" },
+    { "key": "settings.sfxVolume", "value": "Громкость эффектов" },
+    { "key": "settings.effectsIntensity", "value": "Интенсивность эффектов" },
+    { "key": "settings.reducedFlashes", "value": "Меньше вспышек" },
+    { "key": "settings.colorblindMode", "value": "Режим дальтонизма" },
+    { "key": "settings.autoSnap", "value": "Чувствительность авто-снапа" },
+    { "key": "settings.showHints", "value": "Показывать подсказки" },
+    { "key": "settings.language", "value": "Язык" },
+    { "key": "settings.close", "value": "Закрыть" },
+    { "key": "settings.back", "value": "Назад" },
+    { "key": "settings.apply", "value": "Применить" },
+    { "key": "settings.effectsIntensity.hint", "value": "Регулирует яркость бликов, частиц и пост-эффектов." },
+    { "key": "settings.reducedFlashes.hint", "value": "Приглушает вспышки и всплески частиц." },
+    { "key": "settings.colorblindMode.hint", "value": "Меняет акцентные цвета для лучшего контраста." },
+    { "key": "settings.autoSnap.hint", "value": "Определяет ширину авто-выравнивания в Блиссе." },
+    { "key": "settings.showHints.hint", "value": "Включает обучающие подсказки и контекстные советы." },
+    { "key": "language.en", "value": "English" },
+    { "key": "language.ru", "value": "Русский" }
+  ]
+}

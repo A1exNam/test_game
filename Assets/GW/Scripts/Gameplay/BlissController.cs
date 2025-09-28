@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using GW.Core;
 
 namespace GW.Gameplay
 {
@@ -43,6 +44,8 @@ namespace GW.Gameplay
         private float cachedFixedDeltaTime = 0.02f;
         private float remainingUnscaledTime;
         private bool isActive;
+        private bool settingsSubscribed;
+        private CanvasGroup vfxCanvasGroup;
 
         private void Awake()
         {
@@ -52,6 +55,7 @@ namespace GW.Gameplay
             if (vfxRoot != null)
             {
                 vfxRoot.SetActive(false);
+                vfxCanvasGroup = vfxRoot.GetComponent<CanvasGroup>();
             }
 
             if (focusController == null)
@@ -63,11 +67,30 @@ namespace GW.Gameplay
         private void OnEnable()
         {
             ResetState(false);
+
+            if (!SettingsService.IsInitialised)
+            {
+                SettingsService.Initialise();
+            }
+
+            if (!settingsSubscribed)
+            {
+                SettingsService.SettingsChanged += HandleSettingsChanged;
+                settingsSubscribed = true;
+            }
+
+            ApplySettings(SettingsService.Settings);
         }
 
         private void OnDisable()
         {
             ResetState(true);
+
+            if (settingsSubscribed)
+            {
+                SettingsService.SettingsChanged -= HandleSettingsChanged;
+                settingsSubscribed = false;
+            }
         }
 
         private void Update()
@@ -160,6 +183,33 @@ namespace GW.Gameplay
             if (notify)
             {
                 StateChanged?.Invoke(false);
+            }
+        }
+
+        private void HandleSettingsChanged(PlayerSettingsData data)
+        {
+            ApplySettings(data);
+        }
+
+        private void ApplySettings(PlayerSettingsData data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            var resolvedSnap = SettingsService.ResolveAutoSnapPercentage();
+            autoSnapPercentage = Mathf.Clamp(resolvedSnap, 0.05f, 0.5f);
+
+            if (vfxCanvasGroup != null)
+            {
+                var intensity = Mathf.Clamp01(data.effectsIntensity);
+                if (data.reducedFlashes)
+                {
+                    intensity *= 0.6f;
+                }
+
+                vfxCanvasGroup.alpha = intensity;
             }
         }
 

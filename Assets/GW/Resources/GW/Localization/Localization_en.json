@@ -1,0 +1,32 @@
+{
+  "entries": [
+    { "key": "menu.title", "value": "GOLDEN WRAP" },
+    { "key": "menu.subtitle", "value": "Infinite Golden Wrapper Factory" },
+    { "key": "menu.play", "value": "Play" },
+    { "key": "menu.settings", "value": "Settings" },
+    { "key": "menu.zen", "value": "Zen" },
+    { "key": "menu.multi", "value": "Multi+" },
+    { "key": "settings.title", "value": "Settings" },
+    { "key": "settings.section.audio", "value": "Audio" },
+    { "key": "settings.section.accessibility", "value": "Accessibility" },
+    { "key": "settings.section.gameplay", "value": "Gameplay" },
+    { "key": "settings.musicVolume", "value": "Music Volume" },
+    { "key": "settings.sfxVolume", "value": "SFX Volume" },
+    { "key": "settings.effectsIntensity", "value": "Effects Intensity" },
+    { "key": "settings.reducedFlashes", "value": "Reduced Flashes" },
+    { "key": "settings.colorblindMode", "value": "Colorblind Mode" },
+    { "key": "settings.autoSnap", "value": "Auto-Snap Sensitivity" },
+    { "key": "settings.showHints", "value": "Show Hints" },
+    { "key": "settings.language", "value": "Language" },
+    { "key": "settings.close", "value": "Close" },
+    { "key": "settings.back", "value": "Back" },
+    { "key": "settings.apply", "value": "Apply" },
+    { "key": "settings.effectsIntensity.hint", "value": "Scales bloom, particles, and post-processing strength." },
+    { "key": "settings.reducedFlashes.hint", "value": "Softens bright flashes and burst effects." },
+    { "key": "settings.colorblindMode.hint", "value": "Adjusts highlight palette for better contrast." },
+    { "key": "settings.autoSnap.hint", "value": "Controls how generous Bliss auto-alignment feels." },
+    { "key": "settings.showHints.hint", "value": "Toggle tutorial prompts and contextual tips." },
+    { "key": "language.en", "value": "English" },
+    { "key": "language.ru", "value": "Русский" }
+  ]
+}

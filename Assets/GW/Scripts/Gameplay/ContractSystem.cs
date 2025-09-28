@@ -44,7 +44,29 @@ namespace GW.Gameplay
         private void Awake()
         {
             RefreshLines();
-            credits = startingCredits;
+            var save = SaveSystem.Current;
+            save.EnsureIntegrity();
+
+            credits = Mathf.Max(startingCredits, save.credits);
+            if (credits != save.credits)
+            {
+                save.credits = credits;
+            }
+
+            completedContracts.Clear();
+            if (save.completedContracts != null)
+            {
+                for (var i = 0; i < save.completedContracts.Count; i++)
+                {
+                    var id = save.completedContracts[i];
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        completedContracts.Add(id);
+                    }
+                }
+            }
+
+            PersistProgress();
         }
 
         private void OnEnable()
@@ -120,6 +142,7 @@ namespace GW.Gameplay
 
             credits -= amount;
             CreditsChanged?.Invoke(credits);
+            PersistProgress();
             return true;
         }
 
@@ -283,6 +306,8 @@ namespace GW.Gameplay
             {
                 ApplyBlissReward(line, def.RewardBliss);
             }
+
+            PersistProgress();
         }
 
         private void ApplyBlissReward(ConveyorLineController line, float amount)
@@ -365,6 +390,31 @@ namespace GW.Gameplay
             activeContracts.Clear();
             RefillContracts();
             NotifyStateChanged();
+        }
+
+        private void PersistProgress()
+        {
+            var save = SaveSystem.Current;
+            save.credits = credits;
+
+            if (save.completedContracts == null)
+            {
+                save.completedContracts = new List<string>();
+            }
+            else
+            {
+                save.completedContracts.Clear();
+            }
+
+            foreach (var id in completedContracts)
+            {
+                if (!string.IsNullOrEmpty(id))
+                {
+                    save.completedContracts.Add(id);
+                }
+            }
+
+            SaveSystem.Save();
         }
     }
 
