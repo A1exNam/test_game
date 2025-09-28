@@ -53,10 +53,10 @@ namespace GW.UI
         {
             if (Application.isPlaying)
             {
-                Bootstrap();
                 return;
             }
 
+            EditorApplication.delayCall -= HandleEditorDelayCall;
             EditorApplication.delayCall += HandleEditorDelayCall;
         }
 
