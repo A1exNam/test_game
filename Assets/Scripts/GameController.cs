@@ -428,7 +428,9 @@ namespace BlissSeal
                     modifier -= balance.multiLane.threeLaneBlissPenalty;
                 }
 
-                if (_lastBlissActivationTime > 0f && Time.time - _lastBlissActivationTime <= balance.bliss.antiSpamWindowSeconds)
+                bool recentlyActivated = _lastBlissActivationTime > 0f &&
+                    Time.time - _lastBlissActivationTime <= balance.bliss.antiSpamWindowSeconds;
+                if (recentlyActivated)
                 {
                     modifier -= balance.bliss.antiSpamPenaltyPercent / 100f;
                 }
