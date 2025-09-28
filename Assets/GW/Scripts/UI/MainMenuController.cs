@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GW.Gameplay;
 
 namespace GW.UI
 {
@@ -7,6 +8,37 @@ namespace GW.UI
     {
         [SerializeField]
         private string gameSceneName = "Game";
+
+        [Header("Foil Showcase")]
+        [SerializeField]
+        private FoilPatternShowcase patternShowcase;
+
+        [SerializeField]
+        private FoilPatternLibrary patternLibrary;
+
+        [SerializeField]
+        [Tooltip("Resource path used if no library reference is provided explicitly.")]
+        private string patternLibraryResourcePath = "FoilPatternLibrary";
+
+        [SerializeField]
+        [Tooltip("Refresh the foil pattern showcase automatically on enable.")]
+        private bool autoRefreshShowcase = true;
+
+        private void Awake()
+        {
+            if (autoRefreshShowcase)
+            {
+                RefreshPatternShowcase();
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (autoRefreshShowcase)
+            {
+                RefreshPatternShowcase();
+            }
+        }
 
         public void StartCareer()
         {
@@ -17,6 +49,45 @@ namespace GW.UI
             }
 
             SceneManager.LoadScene(gameSceneName);
+        }
+
+        public void SetPatternLibrary(FoilPatternLibrary library)
+        {
+            patternLibrary = library;
+            RefreshPatternShowcase();
+        }
+
+        public void SetPatternShowcase(FoilPatternShowcase showcase)
+        {
+            patternShowcase = showcase;
+            RefreshPatternShowcase();
+        }
+
+        private void RefreshPatternShowcase()
+        {
+            if (patternShowcase == null)
+            {
+                patternShowcase = FindObjectOfType<FoilPatternShowcase>(true);
+            }
+
+            if (patternShowcase == null)
+            {
+                return;
+            }
+
+            if (patternLibrary == null && !string.IsNullOrWhiteSpace(patternLibraryResourcePath))
+            {
+                patternLibrary = Resources.Load<FoilPatternLibrary>(patternLibraryResourcePath);
+            }
+
+            if (patternLibrary != null)
+            {
+                patternShowcase.SetLibrary(patternLibrary);
+            }
+            else
+            {
+                patternShowcase.Refresh();
+            }
         }
     }
 }

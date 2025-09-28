@@ -63,13 +63,34 @@ namespace GW.Gameplay
         private SealZone sealZone;
 
         [SerializeField]
-        private string activePatternId = "Default";
+        private string activePatternId = string.Empty;
+
+        [Header("Foil Patterns")]
+        [SerializeField]
+        private FoilPatternLibrary foilPatternLibrary;
+
+        [SerializeField]
+        [Tooltip("If true, a pattern will be auto-selected when the line starts up.")]
+        private bool selectPatternOnStart = true;
+
+        [SerializeField]
+        [Tooltip("Resource path used when attempting to auto-load a pattern library.")]
+        private string patternLibraryResourcePath = "FoilPatternLibrary";
+
+        [SerializeField]
+        [Tooltip("Rarity bias used when auto-selecting patterns and a library is available.")]
+        private FoilPatternRarity defaultPatternRarity = FoilPatternRarity.Common;
+
+        [SerializeField]
+        [Tooltip("If disabled, all candies on the line share a cached runtime variant of the active pattern.")]
+        private bool randomizePatternPerCandy = true;
 
         public event Action<int> ScoreChanged;
         public event Action<int> ComboChanged;
         public event Action<int> MultiplierChanged;
         public event Action<float> BlissChanged;
         public event Action<ConveyorLineController, SealGrade> SealResolved;
+        public event Action<ConveyorLineController, FoilPatternDef> ActivePatternChanged;
 
         public int Score => score;
         public SealJudge Judge => judge;
@@ -77,6 +98,8 @@ namespace GW.Gameplay
         public Transform SealPoint => sealPoint;
         public LineId LineId => lineId;
         public string ActivePatternId => activePatternId;
+        public FoilPatternLibrary PatternLibrary => foilPatternLibrary;
+        public FoilPatternDef ActivePatternDefinition => activePatternDef;
         public float BasePerfectWindow => perfectWindow;
         public float BaseGoodWindow => goodWindow;
         public int BaseComboStep => comboStep;
@@ -91,8 +114,8 @@ namespace GW.Gameplay
         public float CurrentBeltSpeed => GetEffectiveBeltSpeed();
         public float CurrentSpawnInterval => Mathf.Max(0.1f, spawnInterval * spawnIntervalMultiplier);
 
-        private readonly List<CandyActor> activeCandies = new();
-        private readonly Queue<CandyActor> pool = new();
+        private readonly List<CandyActor> activeCandies = new List<CandyActor>();
+        private readonly Queue<CandyActor> pool = new Queue<CandyActor>();
         private SealJudge judge;
         private float spawnTimer;
         private Vector3 forwardDirection = Vector3.right;
@@ -100,6 +123,9 @@ namespace GW.Gameplay
         private int score;
         private float beltSpeedMultiplier = 1f;
         private float spawnIntervalMultiplier = 1f;
+        private FoilPatternDef activePatternDef;
+        private FoilPatternRuntime? cachedPatternRuntime;
+        private System.Random patternRandom;
 
         private void Awake()
         {
@@ -114,6 +140,25 @@ namespace GW.Gameplay
             judge = new SealJudge(perfectWindow, goodWindow, comboStep, maxMultiplierLevel, multiplierStep, blissPerfect, blissGood, blissFailPenalty, failPenalty);
             judge.OnScored += HandleScored;
             judge.OnStateChanged += HandleJudgeStateChanged;
+
+            EnsurePatternRandom();
+            EnsurePatternLibrary();
+
+            if (selectPatternOnStart)
+            {
+                if (!string.IsNullOrEmpty(activePatternId))
+                {
+                    SetActivePattern(activePatternId);
+                }
+                else
+                {
+                    SelectRandomPattern();
+                }
+            }
+            else if (!string.IsNullOrEmpty(activePatternId))
+            {
+                SetActivePattern(activePatternId);
+            }
         }
 
         private void OnEnable()
@@ -134,8 +179,9 @@ namespace GW.Gameplay
 
         private void Update()
         {
-            TickSpawn(Time.deltaTime);
-            TickCandies(Time.deltaTime);
+            var delta = Time.deltaTime;
+            TickSpawn(delta);
+            TickCandies(delta);
         }
 
         private void TickSpawn(float deltaTime)
@@ -191,8 +237,31 @@ namespace GW.Gameplay
             var candy = GetOrCreateCandy();
             var speed = GetEffectiveBeltSpeed();
             candy.SetSpeed(speed);
-            candy.Activate(this, spawnPoint.position, forwardDirection, speed);
+
+            var runtime = randomizePatternPerCandy ? BuildPatternRuntime() : GetCachedPatternRuntime();
+            candy.Activate(this, spawnPoint.position, forwardDirection, speed, runtime);
             activeCandies.Add(candy);
+        }
+
+        private FoilPatternRuntime? GetCachedPatternRuntime()
+        {
+            if (!cachedPatternRuntime.HasValue)
+            {
+                cachedPatternRuntime = BuildPatternRuntime();
+            }
+
+            return cachedPatternRuntime;
+        }
+
+        private FoilPatternRuntime? BuildPatternRuntime()
+        {
+            if (foilPatternLibrary == null || activePatternDef == null)
+            {
+                return null;
+            }
+
+            EnsurePatternRandom();
+            return foilPatternLibrary.CreateRuntime(activePatternDef, patternRandom);
         }
 
         private CandyActor GetOrCreateCandy()
@@ -273,6 +342,69 @@ namespace GW.Gameplay
         public void SetActivePattern(string patternId)
         {
             activePatternId = patternId ?? string.Empty;
+
+            EnsurePatternLibrary();
+            EnsurePatternRandom();
+
+            if (foilPatternLibrary == null)
+            {
+                activePatternDef = null;
+                cachedPatternRuntime = null;
+                ActivePatternChanged?.Invoke(this, null);
+                return;
+            }
+
+            FoilPatternDef resolved = null;
+            if (!string.IsNullOrEmpty(activePatternId))
+            {
+                resolved = foilPatternLibrary.GetById(activePatternId);
+            }
+
+            if (resolved == null)
+            {
+                resolved = foilPatternLibrary.GetRandomPattern(null, patternRandom);
+            }
+
+            activePatternDef = resolved;
+            cachedPatternRuntime = null;
+
+            if (resolved != null)
+            {
+                activePatternId = resolved.Id;
+            }
+
+            ActivePatternChanged?.Invoke(this, activePatternDef);
+        }
+
+        public void SelectRandomPattern(FoilPatternRarity? rarityOverride = null)
+        {
+            EnsurePatternLibrary();
+            EnsurePatternRandom();
+
+            if (foilPatternLibrary == null)
+            {
+                return;
+            }
+
+            FoilPatternDef pattern;
+            if (rarityOverride.HasValue)
+            {
+                pattern = foilPatternLibrary.GetRandomPattern(rarityOverride, patternRandom);
+                pattern ??= foilPatternLibrary.GetRandomPattern(null, patternRandom);
+            }
+            else
+            {
+                pattern = foilPatternLibrary.GetRandomPattern(null, patternRandom);
+                if (pattern == null)
+                {
+                    pattern = foilPatternLibrary.GetRandomPattern(defaultPatternRarity, patternRandom);
+                }
+            }
+
+            if (pattern != null)
+            {
+                SetActivePattern(pattern.Id);
+            }
         }
 
         public void ApplyJudgeOverrides(
@@ -333,6 +465,25 @@ namespace GW.Gameplay
         private float GetEffectiveBeltSpeed()
         {
             return Mathf.Clamp(beltSpeed * beltSpeedMultiplier, 0.05f, 6f);
+        }
+
+        private void EnsurePatternLibrary()
+        {
+            if (foilPatternLibrary != null || string.IsNullOrWhiteSpace(patternLibraryResourcePath))
+            {
+                return;
+            }
+
+            var loaded = Resources.Load<FoilPatternLibrary>(patternLibraryResourcePath);
+            if (loaded != null)
+            {
+                foilPatternLibrary = loaded;
+            }
+        }
+
+        private void EnsurePatternRandom()
+        {
+            patternRandom ??= new System.Random(Environment.TickCount ^ GetInstanceID());
         }
     }
 }
