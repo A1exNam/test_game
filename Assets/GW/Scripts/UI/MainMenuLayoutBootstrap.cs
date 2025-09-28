@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace GW.UI
 {
@@ -48,6 +51,24 @@ namespace GW.UI
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            if (Application.isPlaying)
+            {
+                Bootstrap();
+                return;
+            }
+
+            EditorApplication.delayCall += HandleEditorDelayCall;
+        }
+
+        private void HandleEditorDelayCall()
+        {
+            EditorApplication.delayCall -= HandleEditorDelayCall;
+
+            if (this == null || Application.isPlaying)
+            {
+                return;
+            }
+
             Bootstrap();
         }
 #endif
