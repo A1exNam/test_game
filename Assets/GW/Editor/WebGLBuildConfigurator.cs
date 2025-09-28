@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -53,11 +55,7 @@ namespace GW.EditorTools
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetApiCompatibilityLevel(
                 BuildTargetGroup.WebGL,
-#if UNITY_2021_2_OR_NEWER
-                ApiCompatibilityLevel.NETStandard
-#else
-                ApiCompatibilityLevel.NET_4_6
-#endif
+                ResolveApiCompatibilityLevel()
             );
             PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Low);
             PlayerSettings.stripEngineCode = true;
@@ -82,11 +80,55 @@ namespace GW.EditorTools
             EditorUserBuildSettings.development = false;
             EditorUserBuildSettings.connectProfiler = false;
             EditorUserBuildSettings.allowDebugging = false;
+            ApplyOptionalWebGLEditorSettings();
+        }
+
+        private static ApiCompatibilityLevel ResolveApiCompatibilityLevel()
+        {
+            foreach (var levelName in new[] { "NETStandard", "NET_Standard_2_0", "NET_4_6" })
+            {
+                if (Enum.TryParse(levelName, out ApiCompatibilityLevel level))
+                {
+                    return level;
+                }
+            }
+
+            return PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.WebGL);
+        }
+
+        private static void ApplyOptionalWebGLEditorSettings()
+        {
 #if UNITY_2021_2_OR_NEWER
-            EditorUserBuildSettings.webGLCompressionFormat = WebGLCompressionFormat.Brotli;
-            EditorUserBuildSettings.webGLLinkerTarget = WebGLLinkerTarget.Wasm;
+            TrySetWebGLBuildSetting("webGLCompressionFormat", WebGLCompressionFormat.Brotli);
+            TrySetWebGLBuildSetting("webGLLinkerTarget", WebGLLinkerTarget.Wasm);
 #endif
         }
+
+#if UNITY_2021_2_OR_NEWER
+        private static void TrySetWebGLBuildSetting(string propertyName, Enum desiredValue)
+        {
+            var property = typeof(EditorUserBuildSettings).GetProperty(
+                propertyName,
+                BindingFlags.Public | BindingFlags.Static
+            );
+
+            if (property == null || !property.CanWrite)
+            {
+                return;
+            }
+
+            object boxedValue;
+            if (property.PropertyType.IsEnum)
+            {
+                boxedValue = Enum.ToObject(property.PropertyType, Convert.ToInt32(desiredValue));
+            }
+            else
+            {
+                boxedValue = Convert.ChangeType(Convert.ToInt32(desiredValue), property.PropertyType);
+            }
+            property.SetValue(null, boxedValue);
+        }
+#endif
     }
 }
 #endif
