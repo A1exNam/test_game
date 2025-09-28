@@ -38,6 +38,11 @@ namespace GW.Core
 
         private System.Random random;
         private bool initialised;
+        private bool settingsSubscribed;
+
+        private float masterVolume = 1f;
+        private float musicVolume = 1f;
+        private float sfxVolume = 1f;
 
         /// <summary>
         /// Gets the active audio controller instance, creating one on first access if necessary.
@@ -101,6 +106,12 @@ namespace GW.Core
             {
                 instance = null;
             }
+
+            if (settingsSubscribed)
+            {
+                SettingsService.SettingsChanged -= HandleSettingsChanged;
+                settingsSubscribed = false;
+            }
         }
 
         private void EnsureInitialised()
@@ -115,6 +126,19 @@ namespace GW.Core
             PrewarmPool(initialSfxPoolSize);
             InitialiseMusicSources();
             SetMusicLayerActive(MusicLayerId.BaseAmbient, true, true);
+
+            if (!SettingsService.IsInitialised)
+            {
+                SettingsService.Initialise();
+            }
+
+            if (!settingsSubscribed)
+            {
+                SettingsService.SettingsChanged += HandleSettingsChanged;
+                settingsSubscribed = true;
+                HandleSettingsChanged(SettingsService.Settings);
+            }
+
             initialised = true;
         }
 
@@ -142,7 +166,8 @@ namespace GW.Core
             var source = GetSfxSource();
             source.clip = clip;
             source.loop = false;
-            source.volume = Mathf.Clamp01(entry.Volume * volumeScale);
+            var baseVolume = Mathf.Clamp01(entry.Volume * volumeScale);
+            source.volume = ApplySfxVolume(baseVolume);
             source.pitch = GetRandomPitch();
             source.Play();
 
@@ -151,6 +176,7 @@ namespace GW.Core
                 Source = source,
                 Id = id,
                 Remaining = clip.length / Mathf.Max(MinPitch, source.pitch),
+                BaseVolume = baseVolume,
             };
 
             activeSfx.Add(playback);
@@ -340,24 +366,24 @@ namespace GW.Core
                     layer.Source.clip = layer.Clip;
                 }
 
-                if (layer.PlayOnAwake && layer.Clip != null)
+            if (layer.PlayOnAwake && layer.Clip != null)
+            {
+                layer.TargetVolume = layer.BaseVolume;
+                layer.Source.volume = ApplyMusicVolume(layer.BaseVolume);
+                if (!layer.Source.isPlaying)
                 {
-                    layer.TargetVolume = layer.BaseVolume;
-                    layer.Source.volume = layer.BaseVolume;
-                    if (!layer.Source.isPlaying)
-                    {
-                        layer.Source.Play();
-                    }
+                    layer.Source.Play();
                 }
-                else
+            }
+            else
+            {
+                layer.TargetVolume = 0f;
+                layer.Source.volume = 0f;
+                if (layer.Source.isPlaying)
                 {
-                    layer.TargetVolume = 0f;
-                    layer.Source.volume = 0f;
-                    if (layer.Source.isPlaying)
-                    {
-                        layer.Source.Stop();
-                    }
+                    layer.Source.Stop();
                 }
+            }
             }
         }
 
@@ -371,7 +397,7 @@ namespace GW.Core
                     continue;
                 }
 
-                var target = Mathf.Clamp01(layer.TargetVolume);
+                var target = ApplyMusicVolume(layer.TargetVolume);
                 var current = layer.Source.volume;
 
                 if (Mathf.Approximately(current, target))
@@ -417,7 +443,7 @@ namespace GW.Core
 
             if (immediate)
             {
-                layer.Source.volume = layer.TargetVolume;
+                layer.Source.volume = ApplyMusicVolume(layer.TargetVolume);
                 if (!active)
                 {
                     layer.Source.Stop();
@@ -437,6 +463,60 @@ namespace GW.Core
             var t = (float)random.NextDouble();
             var pitch = Mathf.Lerp(min, max, t);
             return Mathf.Clamp(pitch, MinPitch, 3f);
+        }
+
+        private float ApplyMusicVolume(float baseVolume)
+        {
+            return Mathf.Clamp01(baseVolume * masterVolume * musicVolume);
+        }
+
+        private float ApplySfxVolume(float baseVolume)
+        {
+            return Mathf.Clamp01(baseVolume * masterVolume * sfxVolume);
+        }
+
+        private void HandleSettingsChanged(PlayerSettingsData data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            musicVolume = Mathf.Clamp01(data.musicVolume);
+            sfxVolume = Mathf.Clamp01(data.sfxVolume);
+            masterVolume = 1f;
+
+            for (var i = 0; i < musicLayers.Count; i++)
+            {
+                var layer = musicLayers[i];
+                if (layer?.Source == null)
+                {
+                    continue;
+                }
+
+                var target = ApplyMusicVolume(layer.TargetVolume);
+                layer.Source.volume = Mathf.Min(layer.Source.volume, target);
+
+                if (target > 0f && !layer.Source.isPlaying && layer.Clip != null)
+                {
+                    layer.Source.Play();
+                }
+                else if (Mathf.Approximately(target, 0f) && layer.TargetVolume <= 0f && layer.Source.isPlaying)
+                {
+                    layer.Source.Stop();
+                }
+            }
+
+            for (var i = 0; i < activeSfx.Count; i++)
+            {
+                var playback = activeSfx[i];
+                if (playback?.Source == null)
+                {
+                    continue;
+                }
+
+                playback.Source.volume = ApplySfxVolume(playback.BaseVolume);
+            }
         }
 
         [Serializable]
@@ -536,6 +616,7 @@ namespace GW.Core
             public AudioSource Source;
             public SfxId Id;
             public float Remaining;
+            public float BaseVolume;
         }
 
     }

@@ -24,12 +24,18 @@ namespace GW.UI
         [Tooltip("Refresh the foil pattern showcase automatically on enable.")]
         private bool autoRefreshShowcase = true;
 
+        [Header("Settings")]
+        [SerializeField]
+        private SettingsPanel settingsPanel;
+
         private void Awake()
         {
             if (autoRefreshShowcase)
             {
                 RefreshPatternShowcase();
             }
+
+            settingsPanel?.Hide();
         }
 
         private void OnEnable()
@@ -61,6 +67,16 @@ namespace GW.UI
         {
             patternShowcase = showcase;
             RefreshPatternShowcase();
+        }
+
+        public void ShowSettings()
+        {
+            settingsPanel?.Show();
+        }
+
+        public void HideSettings()
+        {
+            settingsPanel?.Hide();
         }
 
         private void RefreshPatternShowcase()

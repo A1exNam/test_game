@@ -64,6 +64,22 @@ namespace GW.Gameplay
                     nodeLookup[node.Id] = node;
                 }
             }
+
+            var save = SaveSystem.Current;
+            save.EnsureIntegrity();
+            purchasedNodeIds.Clear();
+
+            if (save.purchasedUpgrades != null)
+            {
+                for (var i = 0; i < save.purchasedUpgrades.Count; i++)
+                {
+                    var id = save.purchasedUpgrades[i];
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        purchasedNodeIds.Add(id);
+                    }
+                }
+            }
         }
 
         private void OnEnable()
@@ -166,6 +182,7 @@ namespace GW.Gameplay
             ApplyAllUpgrades();
             UpgradePurchased?.Invoke(node);
             RaiseStateChanged();
+            PersistUpgrades();
             return true;
         }
 
@@ -290,6 +307,34 @@ namespace GW.Gameplay
                 line.SetSpeedMultiplier(Mathf.Clamp(beltSpeedMultiplier, 0.25f, 4f));
                 line.SetSpawnIntervalMultiplier(Mathf.Clamp(spawnIntervalMultiplier, 0.25f, 4f));
             }
+        }
+
+        private void PersistUpgrades()
+        {
+            var save = SaveSystem.Current;
+            if (save.purchasedUpgrades == null)
+            {
+                save.purchasedUpgrades = new List<string>();
+            }
+            else
+            {
+                save.purchasedUpgrades.Clear();
+            }
+
+            foreach (var id in purchasedNodeIds)
+            {
+                if (!string.IsNullOrEmpty(id))
+                {
+                    save.purchasedUpgrades.Add(id);
+                }
+            }
+
+            if (contractSystem != null)
+            {
+                save.credits = contractSystem.Credits;
+            }
+
+            SaveSystem.Save();
         }
 
         private void BuildLookup(IEnumerable<UpgradeNode> source)
