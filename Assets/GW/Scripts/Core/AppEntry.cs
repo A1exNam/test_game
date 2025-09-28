@@ -12,6 +12,10 @@ namespace GW.Core
         {
             DontDestroyOnLoad(gameObject);
 
+            Application.targetFrameRate = 60;
+            QualitySettings.vSyncCount = 0;
+            Application.runInBackground = true;
+
             SaveSystem.Load();
             SettingsService.Initialise();
         }
