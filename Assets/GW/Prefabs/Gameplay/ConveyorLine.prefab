@@ -49,9 +49,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   lineId: 0
   candyPrefab: {fileID: 1839116804307718797, guid: f5f1a3a2c4d84286a2b3f2a1a8b7c6d5, type: 3}
-  spawnPoint: {fileID: 7002813910029435011}
-  sealPoint: {fileID: 7002813910029435021}
-  despawnPoint: {fileID: 7002813910029435031}
+  spawnPoint: {fileID: 7002813910029435010}
+  sealPoint: {fileID: 7002813910029435020}
+  despawnPoint: {fileID: 7002813910029435030}
   spawnInterval: 1.2
   poolPrewarmPadding: 2
   beltSpeed: 1
