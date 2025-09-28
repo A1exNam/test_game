@@ -338,6 +338,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c2e17b560d8411a90d7e4eb89c42cf2, type: 3}
   m_Name:
   m_EditorClassIdentifier:
+  gameSceneName: Game
+  patternShowcase: {fileID: 0}
+  patternLibrary: {fileID: 11400000, guid: 5bfe1b7823d244cdac03dca6168796e5, type: 2}
+  patternLibraryResourcePath: FoilPatternLibrary
+  autoRefreshShowcase: 1
 --- !u!1 &7261533302796269233
 GameObject:
   m_ObjectHideFlags: 0
