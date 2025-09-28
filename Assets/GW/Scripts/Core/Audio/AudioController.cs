@@ -121,7 +121,10 @@ namespace GW.Core
                 return;
             }
 
-            random ??= new System.Random(Environment.TickCount);
+            if (random == null)
+            {
+                random = new System.Random(Environment.TickCount);
+            }
             BuildLookups();
             PrewarmPool(initialSfxPoolSize);
             InitialiseMusicSources();

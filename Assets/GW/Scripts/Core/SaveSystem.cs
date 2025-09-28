@@ -137,10 +137,25 @@ namespace GW.Core
 
         public void EnsureIntegrity()
         {
-            unlockedPatterns ??= new List<string>();
-            completedContracts ??= new List<string>();
-            purchasedUpgrades ??= new List<string>();
-            settings ??= new PlayerSettingsData();
+            if (unlockedPatterns == null)
+            {
+                unlockedPatterns = new List<string>();
+            }
+
+            if (completedContracts == null)
+            {
+                completedContracts = new List<string>();
+            }
+
+            if (purchasedUpgrades == null)
+            {
+                purchasedUpgrades = new List<string>();
+            }
+
+            if (settings == null)
+            {
+                settings = new PlayerSettingsData();
+            }
         }
     }
 
