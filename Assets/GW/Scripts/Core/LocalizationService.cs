@@ -11,9 +11,11 @@ namespace GW.Core
     public static class LocalizationService
     {
         private const string ResourceRoot = "GW/Localization";
-        private static readonly Dictionary<string, string> entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, string> entries =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static readonly string[] defaultLanguages = { "en", "ru" };
-        private static readonly ReadOnlyCollection<string> supportedLanguages = new ReadOnlyCollection<string>(defaultLanguages);
+        private static readonly ReadOnlyCollection<string> supportedLanguages =
+            new ReadOnlyCollection<string>(defaultLanguages);
 
         private static string currentLanguage = "en";
         private static bool initialised;
