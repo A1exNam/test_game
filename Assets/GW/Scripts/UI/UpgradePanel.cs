@@ -15,7 +15,7 @@ namespace GW.UI
         private string creditsFormat = "Credits: {0:N0}";
 
         [SerializeField]
-        private List<UpgradeNodeView> nodeViews = new();
+        private List<UpgradeNodeView> nodeViews = new List<UpgradeNodeView>();
 
         private UpgradeSystem system;
         private bool subscribed;

@@ -8,7 +8,7 @@ namespace GW.UI
     public sealed class ContractsPanel : MonoBehaviour
     {
         [SerializeField]
-        private List<ContractItemView> contractSlots = new();
+        private List<ContractItemView> contractSlots = new List<ContractItemView>();
 
         private ContractSystem system;
 

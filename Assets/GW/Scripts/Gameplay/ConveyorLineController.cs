@@ -430,7 +430,10 @@ namespace GW.Gameplay
             if (rarityOverride.HasValue)
             {
                 pattern = foilPatternLibrary.GetRandomPattern(rarityOverride, patternRandom);
-                pattern ??= foilPatternLibrary.GetRandomPattern(null, patternRandom);
+                if (pattern == null)
+                {
+                    pattern = foilPatternLibrary.GetRandomPattern(null, patternRandom);
+                }
             }
             else
             {
@@ -579,7 +582,10 @@ namespace GW.Gameplay
 
         private void EnsurePatternRandom()
         {
-            patternRandom ??= new System.Random(Environment.TickCount ^ GetInstanceID());
+            if (patternRandom == null)
+            {
+                patternRandom = new System.Random(Environment.TickCount ^ GetInstanceID());
+            }
         }
     }
 }

@@ -130,17 +130,32 @@ namespace GW.Core
         public int version = 1;
         public int credits;
         public int bestCombo;
-        public List<string> unlockedPatterns = new();
-        public List<string> completedContracts = new();
-        public List<string> purchasedUpgrades = new();
-        public PlayerSettingsData settings = new();
+        public List<string> unlockedPatterns = new List<string>();
+        public List<string> completedContracts = new List<string>();
+        public List<string> purchasedUpgrades = new List<string>();
+        public PlayerSettingsData settings = new PlayerSettingsData();
 
         public void EnsureIntegrity()
         {
-            unlockedPatterns ??= new List<string>();
-            completedContracts ??= new List<string>();
-            purchasedUpgrades ??= new List<string>();
-            settings ??= new PlayerSettingsData();
+            if (unlockedPatterns == null)
+            {
+                unlockedPatterns = new List<string>();
+            }
+
+            if (completedContracts == null)
+            {
+                completedContracts = new List<string>();
+            }
+
+            if (purchasedUpgrades == null)
+            {
+                purchasedUpgrades = new List<string>();
+            }
+
+            if (settings == null)
+            {
+                settings = new PlayerSettingsData();
+            }
         }
     }
 

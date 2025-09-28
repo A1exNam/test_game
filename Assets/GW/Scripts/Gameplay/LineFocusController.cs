@@ -38,7 +38,7 @@ namespace GW.Gameplay
 
         [Header("Line Binding")]
         [SerializeField]
-        private List<ConveyorLineController> lines = new();
+        private List<ConveyorLineController> lines = new List<ConveyorLineController>();
 
         [SerializeField]
         private bool autoPopulateLines = true;
