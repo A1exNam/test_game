@@ -43,7 +43,7 @@ namespace GW.UI
         private Dropdown languageDropdown;
 
         [SerializeField]
-        private List<string> languageCodes = new() { "en", "ru" };
+        private List<string> languageCodes = new List<string> { "en", "ru" };
 
         private bool suppressCallbacks;
 

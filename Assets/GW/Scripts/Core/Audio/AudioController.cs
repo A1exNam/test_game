@@ -16,11 +16,11 @@ namespace GW.Core
 
         [SerializeField]
         [Tooltip("List of short SFX cues that can be triggered by gameplay.")]
-        private List<SfxEntry> sfxEntries = new();
+        private List<SfxEntry> sfxEntries = new List<SfxEntry>();
 
         [SerializeField]
         [Tooltip("Looping music layers (ambient, percussion, bliss loop, etc.).")]
-        private List<MusicLayerEntry> musicLayers = new();
+        private List<MusicLayerEntry> musicLayers = new List<MusicLayerEntry>();
 
         [SerializeField]
         [Tooltip("Number of one-shot AudioSources pre-created for SFX playback.")]
@@ -29,12 +29,12 @@ namespace GW.Core
 
         [SerializeField]
         [Tooltip("Random pitch variation range applied to SFX (min/max).")]
-        private Vector2 pitchVariation = new(0.95f, 1.05f);
+        private Vector2 pitchVariation = new Vector2(0.95f, 1.05f);
 
-        private readonly Dictionary<SfxId, SfxEntry> sfxLookup = new();
-        private readonly Dictionary<MusicLayerId, MusicLayerEntry> musicLookup = new();
-        private readonly Queue<AudioSource> sfxPool = new();
-        private readonly List<SfxPlayback> activeSfx = new();
+        private readonly Dictionary<SfxId, SfxEntry> sfxLookup = new Dictionary<SfxId, SfxEntry>();
+        private readonly Dictionary<MusicLayerId, MusicLayerEntry> musicLookup = new Dictionary<MusicLayerId, MusicLayerEntry>();
+        private readonly Queue<AudioSource> sfxPool = new Queue<AudioSource>();
+        private readonly List<SfxPlayback> activeSfx = new List<SfxPlayback>();
 
         private System.Random random;
         private bool initialised;
@@ -530,7 +530,7 @@ namespace GW.Core
             private float volume = 1f;
 
             [SerializeField]
-            private List<AudioClip> clips = new();
+            private List<AudioClip> clips = new List<AudioClip>();
 
             [NonSerialized]
             private int lastClip = -1;

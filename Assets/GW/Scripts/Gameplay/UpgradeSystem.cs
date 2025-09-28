@@ -14,7 +14,7 @@ namespace GW.Gameplay
         private ContractSystem contractSystem;
 
         [SerializeField]
-        private List<ConveyorLineController> lines = new();
+        private List<ConveyorLineController> lines = new List<ConveyorLineController>();
 
         [SerializeField]
         private bool autoPopulateLines = true;
@@ -24,7 +24,7 @@ namespace GW.Gameplay
 
         [Header("Library")]
         [SerializeField]
-        private List<UpgradeNode> upgradeNodes = new();
+        private List<UpgradeNode> upgradeNodes = new List<UpgradeNode>();
 
         [SerializeField]
         private bool autoPopulateFromResources = true;
@@ -32,8 +32,8 @@ namespace GW.Gameplay
         [SerializeField]
         private string resourcesPath = "GW/Upgrades";
 
-        private readonly HashSet<string> purchasedNodeIds = new();
-        private readonly Dictionary<string, UpgradeNode> nodeLookup = new();
+        private readonly HashSet<string> purchasedNodeIds = new HashSet<string>();
+        private readonly Dictionary<string, UpgradeNode> nodeLookup = new Dictionary<string, UpgradeNode>();
 
         public event Action<UpgradeNode> UpgradePurchased;
         public event Action StateChanged;

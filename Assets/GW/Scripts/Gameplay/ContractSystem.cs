@@ -14,7 +14,7 @@ namespace GW.Gameplay
     {
         [Header("Bindings")]
         [SerializeField]
-        private List<ConveyorLineController> lines = new();
+        private List<ConveyorLineController> lines = new List<ConveyorLineController>();
 
         [SerializeField]
         private bool autoPopulateLines = true;
@@ -24,7 +24,7 @@ namespace GW.Gameplay
 
         [Header("Contracts")]
         [SerializeField]
-        private List<ContractDef> contractLibrary = new();
+        private List<ContractDef> contractLibrary = new List<ContractDef>();
 
         [SerializeField]
         [Min(1)]
@@ -34,8 +34,8 @@ namespace GW.Gameplay
         [Min(0)]
         private int startingCredits;
 
-        private readonly List<ContractInstance> activeContracts = new();
-        private readonly HashSet<string> completedContracts = new();
+        private readonly List<ContractInstance> activeContracts = new List<ContractInstance>();
+        private readonly HashSet<string> completedContracts = new HashSet<string>();
         private int credits;
 
         public event Action<int> CreditsChanged;
