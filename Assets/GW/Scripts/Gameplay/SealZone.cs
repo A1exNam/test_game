@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using GW.Core;
 
 namespace GW.Gameplay
 {
@@ -171,6 +172,12 @@ namespace GW.Gameplay
 
             var signedOffset = line.CalculateOffsetFromSealPoint(targetCandy.transform.position);
             signedOffset = ApplyBlissAutoSnap(signedOffset);
+
+            if (AudioController.HasInstance)
+            {
+                AudioController.Instance.PlaySfx(SfxId.SealClick);
+            }
+
             line.ProcessSealAttempt(targetCandy, signedOffset);
         }
 
