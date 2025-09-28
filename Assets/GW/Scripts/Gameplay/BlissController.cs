@@ -17,15 +17,6 @@ namespace GW.Gameplay
         private GameObject vfxRoot;
 
         [SerializeField]
-        private AudioSource enterAudio;
-
-        [SerializeField]
-        private AudioSource loopAudio;
-
-        [SerializeField]
-        private AudioSource exitAudio;
-
-        [SerializeField]
         private LineFocusController focusController;
 
         [Header("Bliss Settings")]
@@ -61,12 +52,6 @@ namespace GW.Gameplay
             if (vfxRoot != null)
             {
                 vfxRoot.SetActive(false);
-            }
-
-            if (loopAudio != null)
-            {
-                loopAudio.loop = true;
-                loopAudio.playOnAwake = false;
             }
 
             if (focusController == null)
@@ -157,16 +142,6 @@ namespace GW.Gameplay
                 vfxRoot.SetActive(true);
             }
 
-            if (enterAudio != null)
-            {
-                enterAudio.Play();
-            }
-
-            if (loopAudio != null)
-            {
-                loopAudio.Play();
-            }
-
             StateChanged?.Invoke(true);
         }
 
@@ -177,15 +152,10 @@ namespace GW.Gameplay
             isActive = false;
             remainingUnscaledTime = 0f;
 
-            StopAudioAndVfx();
+            StopVfx();
 
             Time.timeScale = cachedTimeScale;
             Time.fixedDeltaTime = cachedFixedDeltaTime;
-
-            if (wasActive && exitAudio != null)
-            {
-                exitAudio.Play();
-            }
 
             if (notify)
             {
@@ -208,16 +178,11 @@ namespace GW.Gameplay
             return focusController.IsLineFocused(trackedLine);
         }
 
-        private void StopAudioAndVfx()
+        private void StopVfx()
         {
             if (vfxRoot != null)
             {
                 vfxRoot.SetActive(false);
-            }
-
-            if (loopAudio != null)
-            {
-                loopAudio.Stop();
             }
         }
     }
