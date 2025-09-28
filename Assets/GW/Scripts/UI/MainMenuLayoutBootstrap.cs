@@ -114,8 +114,7 @@ namespace GW.UI
                 return;
             }
 
-            var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            var standaloneModule = eventSystem.GetComponent<StandaloneInputModule>();
+            _ = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
         }
 
         private void EnsureLayout()
