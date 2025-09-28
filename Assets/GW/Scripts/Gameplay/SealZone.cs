@@ -18,7 +18,7 @@ namespace GW.Gameplay
         [SerializeField]
         private LineFocusController focusController;
 
-        private readonly List<CandyActor> candiesInZone = new();
+        private readonly List<CandyActor> candiesInZone = new List<CandyActor>();
         private Collider2D triggerCollider;
 
         private void Awake()

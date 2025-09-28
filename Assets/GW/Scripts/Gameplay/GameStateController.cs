@@ -41,7 +41,7 @@ namespace GW.Gameplay
         private GameplayAudioBridge audioBridge;
 
         [SerializeField]
-        private List<ConveyorLineController> lines = new();
+        private List<ConveyorLineController> lines = new List<ConveyorLineController>();
 
         private bool initialised;
         private GamePhase phase = GamePhase.Booting;

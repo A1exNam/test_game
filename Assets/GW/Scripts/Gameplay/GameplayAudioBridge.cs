@@ -22,15 +22,15 @@ namespace GW.Gameplay
 
         [Header("Manual References")]
         [SerializeField]
-        private List<ConveyorLineController> lines = new();
+        private List<ConveyorLineController> lines = new List<ConveyorLineController>();
 
         [SerializeField]
-        private List<BlissController> blissControllers = new();
+        private List<BlissController> blissControllers = new List<BlissController>();
 
-        private readonly Dictionary<ConveyorLineController, int> lineCombos = new();
-        private readonly Dictionary<ConveyorLineController, Action<int>> comboHandlers = new();
-        private readonly Dictionary<BlissController, Action<bool>> blissHandlers = new();
-        private readonly HashSet<BlissController> activeBlissControllers = new();
+        private readonly Dictionary<ConveyorLineController, int> lineCombos = new Dictionary<ConveyorLineController, int>();
+        private readonly Dictionary<ConveyorLineController, Action<int>> comboHandlers = new Dictionary<ConveyorLineController, Action<int>>();
+        private readonly Dictionary<BlissController, Action<bool>> blissHandlers = new Dictionary<BlissController, Action<bool>>();
+        private readonly HashSet<BlissController> activeBlissControllers = new HashSet<BlissController>();
 
         private void OnEnable()
         {

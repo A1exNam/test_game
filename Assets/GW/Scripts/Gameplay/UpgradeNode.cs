@@ -33,7 +33,7 @@ namespace GW.Gameplay
         private UpgradeNode prerequisite;
 
         [SerializeField]
-        private List<UpgradeEffectDefinition> effects = new();
+        private List<UpgradeEffectDefinition> effects = new List<UpgradeEffectDefinition>();
 
         public string Id => string.IsNullOrWhiteSpace(id) ? title : id;
         public string Title => title;
